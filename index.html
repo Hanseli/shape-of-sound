@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="The Survivor Filter: a visual essay about Spotify popularity and the sound of songs that stay in circulation." />
+    <meta name="theme-color" content="#101820" />
+    <title>The Shape of Sound — The Survivor Filter</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to story</a>
+    <header class="site-header">
+      <a class="wordmark" href="#top"><span class="wordmark-mark">S<span>/</span>S</span><span>FIELD NOTES <i>/</i> SOUND</span></a>
+      <nav aria-label="Story chapters" class="chapter-nav">
+        <a href="#chapter-1">01 <span>Time</span></a>
+        <a href="#chapter-2">02 <span>Survivors</span></a>
+        <a href="#chapter-3">03 <span>Sound</span></a>
+        <a href="#chapter-4">04 <span>Tracks</span></a>
+      </nav>
+      <a class="source-jump" href="#sources">Sources <span aria-hidden="true">↗</span></a>
+    </header>
+
+    <main id="main">
+      <section class="hero" id="top">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="eyebrow-dot"></span> A LISTENING ARCHAEOLOGY · 1921—2020</p>
+          <h1>The Shape<br />of <em>Sound.</em></h1>
+          <h2>What Makes a Song Survive 100 Years of Recorded Music?</h2>
+          <p class="hero-deck">
+            A familiar old song can still find new ears. This story follows that afterlife through Spotify's
+            track catalog—and asks whether the songs still popular now share a sound with today's hits.
+          </p>
+          <a class="scroll-cue" href="#opening-note"><span></span> FOLLOW THE SURVIVORS</a>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="record record-outer"></div>
+          <div class="record record-middle"></div>
+          <div class="record record-inner"></div>
+          <div class="record-label">SIDE<br /><b>A</b><i></i></div>
+          <div class="hero-orbit orbit-a"></div>
+          <div class="hero-orbit orbit-b"></div>
+          <span class="hero-art-note note-one">1921</span>
+          <span class="hero-art-note note-two">2020</span>
+        </div>
+        <div class="hero-rule"><span>AN INTERACTIVE DATA STORY</span><span>READ WITH YOUR EARS</span></div>
+      </section>
+
+      <section class="opening-note story-section" id="opening-note">
+        <div class="section-rail"><span>THE PREMISE</span><i></i><span>00 / CONTEXT</span></div>
+        <div class="opening-copy">
+          <p class="eyebrow">THE SURVIVOR FILTER</p>
+          <h2>Popularity is a signal from <em>now,</em><br />not a chart from then.</h2>
+          <p>
+            Spotify's <strong>popularity score (0–100)</strong> describes a track's current standing on the
+            platform. It is not a reconstruction of its historical chart rank. A high score for a song released
+            decades ago is a trace of its present-day listening life: an old recording still circulating in a
+            modern streaming catalog.
+          </p>
+          <p>
+            We call that a <strong>survivor</strong>. The Survivor Filter compares high-popularity older tracks
+            with faded tracks from the same decade, then sets their audio fingerprints beside contemporary music.
+            It can reveal patterns in this catalog—but it cannot tell us why a listener presses play.
+          </p>
+          <div class="definition-card">
+            <span class="definition-icon">↳</span>
+            <span><b>OUR WORKING TIERS</b><small>FADED &lt; 20 &nbsp;·&nbsp; NOSTALGIA 20–55 &nbsp;·&nbsp; SURVIVORS &gt; 55</small></span>
+            <span class="definition-live" id="dataset-summary">Loading the archive…</span>
+          </div>
+          <p class="caveat">
+            The catalog is unevenly sampled across years. In this dataset, the 1920s contain no tracks above
+            the survivor threshold; early-decade comparisons can also rest on very small groups.
+          </p>
+        </div>
+      </section>
+
+      <section class="story-section chapter chapter-night" id="chapter-1">
+        <div class="section-rail"><span>01 / TIME</span><i></i><span>WHO STAYS IN ROTATION?</span></div>
+        <div class="chapter-content">
+          <div class="chapter-head">
+            <p class="eyebrow">01 — THE LONG AFTERLIFE</p>
+            <h2>A century in the catalog.<br /><em>Not</em> a century of chart history.</h2>
+            <p class="chapter-intro">
+              Each year contributes a different mix of tracks. The first chart shows the catalog's present-day
+              popularity tiers by release year; the second traces one audio feature across the same timeline.
+              Together they set the baseline for the comparisons ahead.
+            </p>
+          </div>
+          <div class="historical-callout">
+            <span class="callout-marker">✳</span>
+            <p><b>LISTEN FOR THE MEDIUM</b> Electrical recording, the LP, stereo, CDs, and streaming changed how music could be made and replayed. These milestones are historical context—not variables in the Spotify file.</p>
+            <div class="milestone-list"><span>1920s <b>Electrical recording</b></span><span>1948 <b>LP arrives</b></span><span>1982 <b>CD era</b></span><span>2008 <b>On-demand streaming</b></span></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-heading">
+              <div><span class="chart-kicker">CATALOG MIX · SHARE OF TRACKS</span><h3>Which popularity tier survives each release year?</h3></div>
+              <span class="chart-side-note">A tier is today's score, attached to yesterday's release.</span>
+            </div>
+            <div class="svg-frame tier-frame"><svg id="tier-chart" role="img" aria-label="Stacked area chart showing the share of Spotify tracks in each current popularity tier by release year"></svg></div>
+            <div class="chart-legend" id="tier-legend"></div>
+          </div>
+          <div class="chart-card feature-card">
+            <div class="chart-heading feature-toolbar">
+              <div><span class="chart-kicker">AUDIO FINGERPRINT · YEARLY MEAN</span><h3>How does the recording's texture shift?</h3></div>
+              <label class="inline-control" for="year-feature"><span>TRACE A FEATURE</span><select id="year-feature">
+                <option value="loudness">Loudness</option>
+                <option value="acousticness">Acousticness</option>
+                <option value="energy">Energy</option>
+                <option value="valence">Valence</option>
+                <option value="instrumentalness">Instrumentalness</option>
+                <option value="duration_ms">Duration</option>
+              </select></label>
+            </div>
+            <div class="svg-frame feature-frame"><svg id="feature-chart" role="img" aria-label="Line chart of a selected average Spotify audio feature by release year"></svg></div>
+            <p class="chart-caption">Annual means summarize the tracks present in that year. Hover or focus a year to see its track count and tier mix.</p>
+          </div>
+          <p class="chapter-takeaway"><b>THE FIRST FILTER</b> Streaming popularity describes which tracks remain visible on this platform today. It should not be read as a measure of how popular those tracks were when they first appeared.</p>
+        </div>
+      </section>
+
+      <section class="story-section chapter chapter-paper" id="chapter-2">
+        <div class="section-rail"><span>02 / SURVIVORS</span><i></i><span>SAME DECADE, DIFFERENT AFTERLIFE</span></div>
+        <div class="chapter-content">
+          <div class="chapter-head">
+            <p class="eyebrow">02 — THE SURVIVOR FILTER</p>
+            <h2>When songs share a decade,<br />what separates the ones <em>still heard?</em></h2>
+            <p class="chapter-intro">
+              A fairer comparison starts with neighbors in time. For each decade from the 1930s through the
+              1980s, this dumbbell plot connects the mean feature value of faded tracks to that of survivors.
+              The distance is descriptive; the group size tells us how much weight it can carry.
+            </p>
+          </div>
+          <div class="annotation-band">
+            <span>READ THE DISTANCE</span>
+            <p>Each row has its own feature scale. A wider gap means the two tier averages differ more on that feature; compare faded and survivor dots within a row, not positions across different features.</p>
+          </div>
+          <div class="chart-card">
+            <div class="chart-heading comparison-toolbar">
+              <div><span class="chart-kicker">DECADE MATCHUP · MEAN VALUES</span><h3>Different scores, shared birth decades</h3></div>
+              <label class="inline-control" for="comparison-feature"><span>COMPARE FEATURE</span><select id="comparison-feature">
+                <option value="loudness">Loudness</option>
+                <option value="acousticness">Acousticness</option>
+                <option value="energy">Energy</option>
+                <option value="instrumentalness">Instrumentalness</option>
+                <option value="valence">Valence</option>
+                <option value="danceability">Danceability</option>
+                <option value="duration_ms">Duration</option>
+              </select></label>
+            </div>
+            <div class="comparison-legend"><span><i class="legend-dot faded-dot"></i>FADED · &lt;20</span><span><i class="legend-dot survivor-dot"></i>SURVIVORS · &gt;55</span></div>
+            <div class="svg-frame decade-frame"><svg id="decade-chart" role="img" aria-label="Dumbbell chart comparing the mean selected audio feature of faded and survivor tracks by release decade"></svg></div>
+            <div class="chart-legend" id="decade-legend"></div>
+          </div>
+          <div class="context-strip">
+            <span>FORMAT SHIFTS</span>
+            <p>From the LP and multitrack studio to portable cassette and CD, listeners' playback changed alongside recording craft. The dataset contains audio features and release years—not the technology used to make each track.</p>
+          </div>
+          <p class="chapter-takeaway"><b>KEEP THE SAMPLE IN VIEW</b> The 1930s survivor group has only two tracks. Small groups can make a large-looking gap; counts are shown beside each decade for exactly that reason.</p>
+        </div>
+      </section>
+
+      <section class="story-section chapter chapter-night" id="chapter-3">
+        <div class="section-rail"><span>03 / SOUND</span><i></i><span>THE SHAPE OF A SURVIVOR</span></div>
+        <div class="chapter-content">
+          <div class="chapter-head">
+            <p class="eyebrow">03 — FEATURES, NOT FORMULAS</p>
+            <h2>Do old survivors sound<br />more like <em>today?</em></h2>
+            <p class="chapter-intro">
+              Each dot below is one track from a compact, era-balanced sample. Color marks today's popularity
+              tier; shape marks its recording era. Choose “Pre-1980 + 2010s” and the survivor tier to compare
+              long-lived tracks with modern hits on the same feature axes.
+            </p>
+          </div>
+          <div class="milestone-callout">
+            <span class="milestone-year">1980s → 2000s</span>
+            <p>Digital recording and on-demand playback changed the production and distribution landscape. The dots show measured audio features—not a direct measurement of those technologies or their causes.</p>
+          </div>
+          <div class="scatter-controls">
+            <label class="inline-control" for="scatter-x"><span>X AXIS</span><select id="scatter-x"></select></label>
+            <label class="inline-control" for="scatter-y"><span>Y AXIS</span><select id="scatter-y"></select></label>
+            <label class="inline-control" for="scatter-era"><span>RELEASE PERIOD</span><select id="scatter-era">
+              <option value="all">All sampled eras</option>
+              <option value="survivor-compare">Pre-1980 + 2010s comparison</option>
+              <option value="pre-1980">Before 1980</option>
+              <option value="1980-1999">1980s–1990s</option>
+              <option value="2000-2009">2000s</option>
+              <option value="2010-2019">2010s</option>
+            </select></label>
+            <label class="inline-control" for="scatter-tier"><span>POPULARITY TIER</span><select id="scatter-tier">
+              <option value="all">All three tiers</option>
+              <option value="survivors">Survivors (&gt;55)</option>
+              <option value="nostalgia">Nostalgia (20–55)</option>
+              <option value="faded">Faded (&lt;20)</option>
+            </select></label>
+          </div>
+          <div class="chart-card scatter-card">
+            <div class="chart-heading">
+              <div><span class="chart-kicker">TRACK-LEVEL DETAIL · BALANCED SAMPLE</span><h3 id="scatter-title">Energy vs. Loudness</h3></div>
+              <span class="chart-side-note" id="scatter-count">— sampled tracks</span>
+            </div>
+            <div class="scatter-legend" id="scatter-legend"></div>
+            <div class="svg-frame scatter-frame"><svg id="scatter-chart" role="img" aria-label="Scatter plot of sampled tracks by two selectable audio features, colored by popularity tier and shaped by release era"></svg></div>
+            <div class="chart-tooltip" id="scatter-tooltip" role="status" aria-live="polite"></div>
+          </div>
+          <p class="chapter-takeaway"><b>AN ALIGNMENT, NOT A CAUSE</b> If older survivors cluster near modern tracks on a chosen feature, that is an association in this sample. It does not show that streaming-era production created their staying power.</p>
+        </div>
+      </section>
+
+      <section class="story-section chapter chapter-coral" id="chapter-4">
+        <div class="section-rail"><span>04 / TRACKS</span><i></i><span>ONE SONG AT A TIME</span></div>
+        <div class="chapter-content">
+          <div class="chapter-head">
+            <p class="eyebrow">04 — THE LISTENING ROOM</p>
+            <h2>A survivor has a <em>birth decade.</em><br />And a present tense.</h2>
+            <p class="chapter-intro">
+              Meet eight recognizable high-popularity tracks from the 1940s to the 2010s. For each, the chart
+              compares its audio features with the average track from its own release decade—a baseline, not a
+              verdict on what makes a song last.
+            </p>
+          </div>
+          <div class="spotlight-layout">
+            <div class="spotlight-control">
+              <label class="inline-control" for="spotlight-select"><span>CHOOSE A SURVIVOR</span><select id="spotlight-select"></select></label>
+              <div class="spotlight-meta">
+                <span id="spotlight-decade">—</span>
+                <span>SPOTIFY POPULARITY <b id="spotlight-popularity">—</b></span>
+              </div>
+              <h3 id="spotlight-track-title">Loading tracks…</h3>
+              <p id="spotlight-artist" class="spotlight-artist"></p>
+              <p id="spotlight-copy" class="spotlight-copy">Track-level measurements compared with the mean of all tracks in the same release decade.</p>
+            </div>
+            <div class="chart-card spotlight-card">
+              <div class="chart-heading">
+                <div><span class="chart-kicker">TRACK VS. BIRTH-DECADE BASELINE</span><h3>Measured against its musical neighbors</h3></div>
+                <div class="comparison-legend"><span><i class="legend-dot track-dot"></i>TRACK</span><span><i class="legend-dot baseline-dot"></i>DECADE MEAN</span></div>
+              </div>
+              <div class="svg-frame spotlight-frame"><svg id="spotlight-chart" role="img" aria-label="Paired feature values comparing a selected high-popularity track with the mean values of tracks from its release decade"></svg></div>
+            </div>
+          </div>
+          <div class="closing-note">
+            <span>THE SURVIVOR FILTER, IN SHORT</span>
+            <p>A current popularity score can point us toward songs that still circulate. Audio features can describe their sound. Neither can tell the whole story of memory, rediscovery, licensing, playlist placement, or the people who keep listening.</p>
+          </div>
+        </div>
+      </section>
+
+      <footer id="sources">
+        <div class="footer-top"><span class="wordmark-mark">S<span>/</span>S</span><p>The Shape of Sound<br /><small>READ THE PATTERN. THEN PRESS PLAY.</small></p></div>
+        <div class="footer-sources">
+          <div><b>DATASET</b><a href="https://www.kaggle.com/datasets/yamaerenay/spotify-dataset-19212020-160k-tracks" target="_blank" rel="noreferrer">Yama Erenay · Spotify Dataset 1921–2020 (160k+ Tracks)</a><p>Track-level audio features and current Spotify popularity. This project uses the provided local CSV and its precomputed summary.</p></div>
+          <div><b>VISUALIZATION</b><a href="https://www.cs.ubc.ca/~tmm/vadbook/" target="_blank" rel="noreferrer">Tamara Munzner · Visualization Analysis and Design (2014)</a><p>Comparisons move from overview to detail; visual encodings make relationships and uncertainty visible.</p></div>
+          <div><b>STORY INSPIRATION</b><a href="https://pudding.cool/" target="_blank" rel="noreferrer">The Pudding · Visual Essays</a><p>A reference for guided, reader-paced data storytelling.</p></div>
+        </div>
+        <div class="footer-bottom"><span>POPULARITY IS A PLATFORM SIGNAL, NOT A HISTORICAL CHART</span><a href="#top">BACK TO TOP ↑</a></div>
+      </footer>
+    </main>
+    <div class="page-status" id="page-status" role="status">Tuning the archive…</div>
+  </body>
+</html>
