@@ -269,8 +269,8 @@
             <h2>A survivor has a <em>birth decade.</em><br />And a present tense.</h2>
             <p class="chapter-intro">
               Meet eight recognizable high-popularity tracks from the 1940s to the 2010s. For each, the chart
-              compares its audio features with the average track from its own release decade—a baseline, not a
-              verdict on what makes a song last.
+              wraps five bounded audio scores into concentric sound rings. Each survivor is compared with the
+              average track from its own release decade—a listening profile, not a verdict on what makes a song last.
             </p>
           </div>
           <div class="spotlight-layout">
@@ -283,13 +283,16 @@
               <h3 id="spotlight-track-title">Loading tracks…</h3>
               <p id="spotlight-artist" class="spotlight-artist"></p>
               <p id="spotlight-copy" class="spotlight-copy">Track-level measurements compared with the mean of all tracks in the same release decade.</p>
+              <p class="spotlight-scale-note" id="spotlight-scale-note"></p>
             </div>
             <div class="chart-card spotlight-card">
               <div class="chart-heading">
-                <div><span class="chart-kicker">TRACK VS. BIRTH-DECADE BASELINE</span><h3>Measured against its musical neighbors</h3></div>
+                <div><span class="chart-kicker">SONIC FINGERPRINT · FIVE 0–1 AUDIO FEATURES</span><h3>The sound ring</h3></div>
                 <div class="comparison-legend"><span><i class="legend-dot track-dot"></i>TRACK</span><span><i class="legend-dot baseline-dot"></i>DECADE MEAN</span></div>
               </div>
-              <div class="svg-frame spotlight-frame"><svg id="spotlight-chart" role="img" aria-label="Paired feature values comparing a selected high-popularity track with the mean values of tracks from its release decade"></svg></div>
+              <div class="svg-frame spotlight-frame"><svg id="spotlight-chart" role="img" aria-label="Concentric sound rings comparing five audio feature scores for the selected track and its birth-decade average"></svg></div>
+              <div class="sound-ring-key" id="spotlight-ring-key" aria-label="Audio feature values for the selected track and decade mean"></div>
+              <p class="spotlight-interpretation"><b>HOW TO READ THE RINGS</b> From outside inward, rings follow the feature key below. Arc length shows its 0–1 score: longer means a higher measured value, not “better.” Solid dark arcs are the track; coral arcs are the decade mean.</p>
             </div>
           </div>
           <div class="closing-note">

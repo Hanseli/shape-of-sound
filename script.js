@@ -29,7 +29,7 @@
     ...COMPARISON_FEATURES,
     popularity: { label: "Spotify popularity", unit: "score (0–100)" },
   };
-  const SPOTLIGHT_FEATURES = Object.keys(COMPARISON_FEATURES);
+  const SPOTLIGHT_FEATURES = ["acousticness", "danceability", "energy", "instrumentalness", "valence"];
   const TIER_LABELS = {
     faded: "Faded · <20",
     nostalgia: "Nostalgia · 20–55",
@@ -500,6 +500,8 @@
     const direction = (value) => value >= 0 ? "above" : "below";
     $("#spotlight-copy").textContent =
       `This track's energy is ${Math.abs(energyDelta).toFixed(2)} ${direction(energyDelta)} its decade mean; acousticness is ${Math.abs(acousticDelta).toFixed(2)} ${direction(acousticDelta)}. The baseline averages ${numberFormat.format(baseline.track_count)} tracks from the ${baseline.decade}.`;
+    $("#spotlight-scale-note").textContent =
+      `Outside the ring · Loudness: ${formatValue(COMPARISON_FEATURES, "loudness", track.loudness)} vs. ${formatValue(COMPARISON_FEATURES, "loudness", baseline.averages.loudness)} decade mean · Duration: ${formatValue(COMPARISON_FEATURES, "duration_ms", track.duration_ms)} vs. ${formatValue(COMPARISON_FEATURES, "duration_ms", baseline.averages.duration_ms)} decade mean.`;
     renderSpotlightChart(track);
   }
 
@@ -509,79 +511,85 @@
     const width = element.getBoundingClientRect().width;
     const height = element.getBoundingClientRect().height;
     if (!width || !height) return;
-    const isMobile = width < 540;
-    const margin = { top: 18, right: isMobile ? 128 : 190, bottom: 18, left: isMobile ? 120 : 160 };
-    const innerWidth = Math.max(35, width - margin.left - margin.right);
-    const rowHeight = Math.min(48, (height - margin.top - margin.bottom) / SPOTLIGHT_FEATURES.length);
     const root = svg.attr("viewBox", `0 0 ${width} ${height}`).attr("preserveAspectRatio", "xMidYMid meet");
     root.selectAll("*").remove();
-    const plot = root.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const radius = Math.min(width, height) * 0.43;
+    const innerRadius = radius * 0.34;
+    const bandWidth = (radius - innerRadius) / SPOTLIGHT_FEATURES.length;
+    const baseline = track.birth_decade_baseline;
+    const arc = d3.arc();
+    const fullArc = d3.arc().startAngle(0).endAngle(2 * Math.PI);
+    const translated = root.append("g").attr("transform", `translate(${centerX},${centerY})`);
+
+    root.append("title").text(`${track.name}: concentric sound rings`);
+    root.append("desc").text(`Five concentric rings compare acousticness, danceability, energy, instrumentalness, and valence for ${track.name} and the ${baseline.decade} mean. Longer arcs indicate higher 0–1 scores.`);
 
     SPOTLIGHT_FEATURES.forEach((key, index) => {
       const feature = COMPARISON_FEATURES[key];
-      const baselineValue = track.birth_decade_baseline.averages[key];
       const trackValue = track[key];
-      const extents = d3.extent(summary.curated_spotlights.flatMap((item) => [
-        item[key],
-        item.birth_decade_baseline.averages[key],
-      ]));
-      const span = extents[1] - extents[0] || Math.max(Math.abs(extents[0]) * .1, 1);
-      const scale = d3.scaleLinear()
-        .domain([extents[0] - span * .12, extents[1] + span * .12])
-        .range([0, innerWidth]);
-      const centerY = index * rowHeight + rowHeight / 2;
-      const xTrack = scale(trackValue);
-      const xBaseline = scale(baselineValue);
-      plot.append("line")
-        .attr("class", "spotlight-line")
-        .attr("x1", xTrack)
-        .attr("x2", xBaseline)
-        .attr("y1", centerY)
-        .attr("y2", centerY);
-      plot.append("circle")
-        .attr("class", "spotlight-track")
-        .attr("cx", xTrack)
-        .attr("cy", centerY)
-        .attr("r", 6)
-        .attr("tabindex", 0)
-        .attr("aria-label", `${track.name}: ${feature.label} ${formatValue(COMPARISON_FEATURES, key, trackValue)}`)
-        .on("pointerenter focus", (event) => showTooltip(
-          event,
-          `${track.name} · ${feature.label}`,
-          `Track: ${formatValue(COMPARISON_FEATURES, key, trackValue)}\n${track.birth_decade_baseline.decade} mean: ${formatValue(COMPARISON_FEATURES, key, baselineValue)}`,
-        ))
-        .on("pointerleave blur", hideTooltip);
-      plot.append("circle")
-        .attr("class", "spotlight-baseline")
-        .attr("cx", xBaseline)
-        .attr("cy", centerY)
-        .attr("r", 6)
-        .attr("tabindex", 0)
-        .attr("aria-label", `${track.birth_decade_baseline.decade} mean ${feature.label} ${formatValue(COMPARISON_FEATURES, key, baselineValue)}`)
-        .on("pointerenter focus", (event) => showTooltip(
-          event,
-          `${track.birth_decade_baseline.decade} mean · ${feature.label}`,
-          `${numberFormat.format(track.birth_decade_baseline.track_count)} tracks\nMean: ${formatValue(COMPARISON_FEATURES, key, baselineValue)}`,
-        ))
-        .on("pointerleave blur", hideTooltip);
-      plot.append("text")
-        .attr("class", "spotlight-feature")
-        .attr("x", -12)
-        .attr("y", centerY + 4)
-        .attr("text-anchor", "end")
-        .text(feature.label);
-      plot.append("text")
-        .attr("class", "spotlight-values")
-        .attr("x", innerWidth + 12)
-        .attr("y", centerY + 4)
-        .text(`${formatValue(COMPARISON_FEATURES, key, trackValue)} / ${formatValue(COMPARISON_FEATURES, key, baselineValue)}`);
+      const baselineValue = baseline.averages[key];
+      const outerEdge = radius - index * bandWidth - 1;
+      const innerEdge = radius - (index + 1) * bandWidth + 1;
+      const laneGap = 1.5;
+      const laneWidth = (outerEdge - innerEdge - laneGap) / 2;
+      const trackOuter = outerEdge;
+      const trackInner = outerEdge - laneWidth;
+      const baselineOuter = innerEdge + laneWidth;
+      const baselineInner = innerEdge;
+      const group = translated.append("g").attr("class", "sound-ring-feature");
+      const currentValueFor = (series) => series === "track" ? trackValue : baselineValue;
+      const drawArc = (outerRadius, innerRadius, value) => arc
+        .innerRadius(innerRadius)
+        .outerRadius(outerRadius)
+        .startAngle(0)
+        .endAngle(2 * Math.PI * Math.max(0, Math.min(1, value)))();
+      const drawLane = (series, value, outerRadius, innerRadius) => {
+        group.append("path")
+          .attr("class", `sound-ring-arc sound-ring-arc-${series}`)
+          .attr("d", fullArc.innerRadius(innerRadius).outerRadius(outerRadius)())
+          .attr("aria-hidden", "true");
+        group.append("path")
+          .attr("class", `sound-ring-arc sound-ring-arc-${series} sound-ring-progress`)
+          .attr("d", drawArc(outerRadius, innerRadius, value))
+          .attr("tabindex", 0)
+          .attr("aria-label", `${series === "track" ? track.name : `${baseline.decade} mean`} ${feature.label}: ${formatValue(COMPARISON_FEATURES, key, currentValueFor(series))}`)
+          .on("pointerenter focus", (event) => showTooltip(
+            event,
+            `${feature.label} · ${series === "track" ? track.name : `${baseline.decade} mean`}`,
+            `Track: ${formatValue(COMPARISON_FEATURES, key, trackValue)}\n${baseline.decade} mean: ${formatValue(COMPARISON_FEATURES, key, baselineValue)}`,
+          ))
+          .on("pointerleave blur", hideTooltip);
+      };
+      drawLane("track", trackValue, trackOuter, trackInner);
+      drawLane("baseline", baselineValue, baselineOuter, baselineInner);
     });
+
+    root.append("circle")
+      .attr("class", "sound-ring-center")
+      .attr("cx", centerX)
+      .attr("cy", centerY)
+      .attr("r", innerRadius * 0.87);
     root.append("text")
-      .attr("class", "spotlight-values")
-      .attr("x", width - 8)
-      .attr("y", height - 4)
-      .attr("text-anchor", "end")
-      .text("TRACK / DECADE MEAN · EACH ROW HAS ITS OWN SCALE");
+      .attr("class", "sound-ring-center-label")
+      .attr("x", centerX)
+      .attr("y", centerY - 3)
+      .attr("text-anchor", "middle")
+      .text("SOUND");
+    root.append("text")
+      .attr("class", "sound-ring-center-label sound-ring-center-subtitle")
+      .attr("x", centerX)
+      .attr("y", centerY + 12)
+      .attr("text-anchor", "middle")
+      .text("RING");
+
+    $("#spotlight-ring-key").innerHTML = SPOTLIGHT_FEATURES.map((key) => `
+      <div class="sound-ring-key-item">
+        <span>${COMPARISON_FEATURES[key].label}</span>
+        <span class="sound-ring-key-values"><b>${track[key].toFixed(2)}</b><i>/</i><span>${baseline.averages[key].toFixed(2)}</span></span>
+      </div>
+    `).join("");
   }
 
   function bindControls() {
