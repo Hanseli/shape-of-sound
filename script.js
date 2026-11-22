@@ -83,6 +83,18 @@
     return extent;
   }
 
+  function prefersReducedMotion() {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
+  function chartTransition(selection, duration, delay = 0) {
+    const reducedMotion = prefersReducedMotion();
+    return selection.transition()
+      .duration(reducedMotion ? 0 : duration)
+      .delay(reducedMotion ? 0 : delay)
+      .ease(d3.easeCubicOut);
+  }
+
   function showTooltip(event, titleText, detailText) {
     const tooltip = $("#scatter-tooltip");
     const title = document.createElement("strong");
@@ -169,16 +181,23 @@
       .attr("text-anchor", "middle")
       .text("SHARE OF TRACKS");
 
-    const area = d3.area()
+    const areaPath = (layer, progress) => d3.area()
       .x((point) => x(point.data.year))
       .y0((point) => y(point[0]))
-      .y1((point) => y(point[1]))
-      .curve(d3.curveMonotoneX);
-    plot.selectAll(".tier-area")
+      .y1((point) => y(point[0] + (point[1] - point[0]) * progress))
+      .curve(d3.curveMonotoneX)(layer);
+    const areas = plot.selectAll(".tier-area")
       .data(layers)
       .join("path")
       .attr("class", (layer) => `tier-area area-${layer.key}`)
-      .attr("d", area);
+      .attr("d", (layer) => areaPath(layer, 0));
+    areas.each(function (layer, index) {
+      chartTransition(d3.select(this), 720, index * 110)
+        .attrTween("d", () => {
+          const progress = d3.interpolateNumber(0, 1);
+          return (t) => areaPath(layer, progress(t));
+        });
+    });
 
     const tooltipLayer = plot.append("g").attr("class", "year-hover-layer");
     const bisect = d3.bisector((row) => row.year).center;
@@ -215,7 +234,7 @@
         return card;
       });
 
-    cards.each(function (key) {
+    cards.each(function (key, featureIndex) {
       const card = d3.select(this);
       const feature = YEAR_FEATURES[key];
       card.select(".feature-multiple-title").text(`${feature.label} · ${feature.unit}`);
@@ -255,7 +274,18 @@
         .x((row) => x(row.year))
         .y((row) => y(valueFor(YEAR_FEATURES, key, row.averages[key])))
         .curve(d3.curveMonotoneX);
-      plot.append("path").datum(rows).attr("class", "feature-line").attr("d", line);
+      const featureLine = plot.append("path")
+        .datum(rows)
+        .attr("class", "feature-line")
+        .attr("d", line);
+      const lineLength = featureLine.node().getTotalLength();
+      if (lineLength > 0 && !prefersReducedMotion()) {
+        featureLine
+          .attr("stroke-dasharray", lineLength)
+          .attr("stroke-dashoffset", lineLength);
+        chartTransition(featureLine, 760, featureIndex * 85)
+          .attr("stroke-dashoffset", 0);
+      }
       plot.selectAll(".feature-point")
         .data(rows)
         .join("circle")
@@ -334,13 +364,13 @@
     rowGroup.append("line")
       .attr("class", "dumbbell-line")
       .attr("x1", (row) => x(valueFor(COMPARISON_FEATURES, key, row.faded.means[key])))
-      .attr("x2", (row) => x(valueFor(COMPARISON_FEATURES, key, row.survivors.means[key])))
+      .attr("x2", (row) => x(valueFor(COMPARISON_FEATURES, key, row.faded.means[key])))
       .attr("y1", 0)
       .attr("y2", 0);
     rowGroup.append("circle")
       .attr("class", "dumbbell-faded")
       .attr("cx", (row) => x(valueFor(COMPARISON_FEATURES, key, row.faded.means[key])))
-      .attr("r", 7)
+      .attr("r", 4)
       .attr("tabindex", 0)
       .attr("aria-label", (row) => `${row.decade} faded mean ${formatValue(COMPARISON_FEATURES, key, row.faded.means[key])}, ${row.faded.count} tracks`)
       .on("pointerenter focus", (event, row) => showTooltip(
@@ -352,7 +382,7 @@
     rowGroup.append("circle")
       .attr("class", "dumbbell-survivor")
       .attr("cx", (row) => x(valueFor(COMPARISON_FEATURES, key, row.survivors.means[key])))
-      .attr("r", 7)
+      .attr("r", 4)
       .attr("tabindex", 0)
       .attr("aria-label", (row) => `${row.decade} survivor mean ${formatValue(COMPARISON_FEATURES, key, row.survivors.means[key])}, ${row.survivors.count} tracks`)
       .on("pointerenter focus", (event, row) => showTooltip(
@@ -361,6 +391,14 @@
         `Mean ${feature.label.toLowerCase()}: ${formatValue(COMPARISON_FEATURES, key, row.survivors.means[key])}\nTracks in group: ${numberFormat.format(row.survivors.count)}`,
       ))
       .on("pointerleave blur", hideTooltip);
+    rowGroup.each(function (row, index) {
+      const group = d3.select(this);
+      const delay = index * 90;
+      chartTransition(group.select(".dumbbell-line"), 520, delay)
+        .attr("x2", x(valueFor(COMPARISON_FEATURES, key, row.survivors.means[key])));
+      chartTransition(group.select(".dumbbell-faded"), 280, delay).attr("r", 7);
+      chartTransition(group.select(".dumbbell-survivor"), 280, delay + 170).attr("r", 7);
+    });
     rowGroup.append("text")
       .attr("class", "row-count")
       .attr("x", innerWidth + 12)
@@ -450,17 +488,18 @@
         .attr("text-anchor", "middle")
         .text("No sampled tracks match these filters.");
     } else {
-      plot.selectAll(".point")
+      const points = plot.selectAll(".point")
         .data(rows, (track) => track.id)
         .join("path")
         .attr("class", "point")
         .attr("d", (track) => {
           const shape = track.year < 1980 ? d3.symbolDiamond :
             track.year < 2010 ? d3.symbolSquare : d3.symbolCircle;
-          return d3.symbol().type(shape).size(rows.length > 300 ? 65 : 90)();
+          return d3.symbol().type(shape).size(40)();
         })
         .attr("transform", (track) => `translate(${x(valueFor(SCATTER_FEATURES, xKey, track[xKey]))},${y(valueFor(SCATTER_FEATURES, yKey, track[yKey]))})`)
         .attr("fill", (track) => TIER_COLORS[tierFor(track.popularity)])
+        .attr("opacity", 0.55)
         .attr("tabindex", 0)
         .attr("aria-label", (track) =>
           `${track.name} by ${track.artists.join(", ")}, ${track.year}. Popularity ${track.popularity}. ${xFeature.label} ${formatValue(SCATTER_FEATURES, xKey, track[xKey])}; ${yFeature.label} ${formatValue(SCATTER_FEATURES, yKey, track[yKey])}.`,
@@ -471,6 +510,18 @@
           `${track.artists.join(", ")}\n${track.year} · ${track.decade} · Popularity ${track.popularity}\n${xFeature.label}: ${formatValue(SCATTER_FEATURES, xKey, track[xKey])}\n${yFeature.label}: ${formatValue(SCATTER_FEATURES, yKey, track[yKey])}`,
         ))
         .on("pointerleave blur", hideTooltip);
+      points.each(function (track) {
+        const point = d3.select(this);
+        const shape = track.year < 1980 ? d3.symbolDiamond :
+          track.year < 2010 ? d3.symbolSquare : d3.symbolCircle;
+        const targetSize = rows.length > 300 ? 65 : 90;
+        chartTransition(point, 480)
+          .attrTween("d", () => {
+            const size = d3.interpolateNumber(40, targetSize);
+            return (t) => d3.symbol().type(shape).size(size(t))();
+          })
+          .attr("opacity", 0.76);
+      });
     }
     const era = $("#scatter-era").selectedOptions[0].textContent;
     const tier = $("#scatter-tier").value;
@@ -558,7 +609,7 @@
     const bandWidth = (radius - innerRadius) / SPOTLIGHT_FEATURES.length;
     const medians = genre.medians;
     const arc = d3.arc();
-    const fullArc = d3.arc().startAngle(0).endAngle(2 * Math.PI);
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const translated = root.append("g").attr("transform", `translate(${centerX},${centerY})`);
 
     svg.attr("aria-label", `Concentric sound rings for ${track.name} compared with the ${genre.name} artist-genre median`);
@@ -583,14 +634,36 @@
         .outerRadius(outerRadius)
         .startAngle(0)
         .endAngle(2 * Math.PI * Math.max(0, Math.min(1, value)))();
+      const unfoldArc = (path, outerRadius, innerRadius, value, delay) => {
+        if (reducedMotion) {
+          path.attr("d", drawArc(outerRadius, innerRadius, value));
+          return;
+        }
+        const endAngle = 2 * Math.PI * Math.max(0, Math.min(1, value));
+        path
+          .attr("d", drawArc(0, 0, 0))
+          .transition()
+          .delay(delay)
+          .duration(560)
+          .ease(d3.easeCubicOut)
+          .attrTween("d", () => {
+            const inner = d3.interpolate(0, innerRadius);
+            const outer = d3.interpolate(0, outerRadius);
+            const angle = d3.interpolate(0, endAngle);
+            return (t) => arc
+              .innerRadius(inner(t))
+              .outerRadius(outer(t))
+              .startAngle(0)
+              .endAngle(angle(t))();
+          });
+      };
       const drawLane = (series, value, outerRadius, innerRadius) => {
-        group.append("path")
+        const delay = (SPOTLIGHT_FEATURES.length - 1 - index) * 70;
+        const background = group.append("path")
           .attr("class", `sound-ring-arc sound-ring-arc-${series}`)
-          .attr("d", fullArc.innerRadius(innerRadius).outerRadius(outerRadius)())
           .attr("aria-hidden", "true");
-        group.append("path")
+        const progress = group.append("path")
           .attr("class", `sound-ring-arc sound-ring-arc-${series} sound-ring-progress`)
-          .attr("d", drawArc(outerRadius, innerRadius, value))
           .attr("tabindex", 0)
           .attr("aria-label", `${series === "track" ? track.name : `${genre.name} median`} ${feature.label}: ${formatValue(COMPARISON_FEATURES, key, currentValueFor(series))}`)
           .on("pointerenter focus", (event) => showTooltip(
@@ -599,6 +672,8 @@
             `Track: ${formatValue(COMPARISON_FEATURES, key, trackValue)}\n${genre.name} median: ${formatValue(COMPARISON_FEATURES, key, medianValue)}`,
           ))
           .on("pointerleave blur", hideTooltip);
+        unfoldArc(background, outerRadius, innerRadius, 1, delay);
+        unfoldArc(progress, outerRadius, innerRadius, value, delay);
       };
       drawLane("track", trackValue, trackOuter, trackInner);
       drawLane("median", medianValue, medianOuter, medianInner);
