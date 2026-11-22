@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const DATA_URL = "Data/survivor_summary.json";
+  const DATA_URL = "Data/survivor_summary.json?v=2";
   const TIERS = ["faded", "nostalgia", "survivors"];
   const TIER_COLORS = {
     faded: "#78b6d2",
@@ -479,33 +479,71 @@
     $("#scatter-count").textContent = `${rows.length} sampled tracks · ${era.toLowerCase()} · ${tierLabel}`;
   }
 
-  function initializeSpotlights() {
-    const select = $("#spotlight-select");
-    select.replaceChildren(...summary.curated_spotlights.map((track) =>
-      new Option(`${track.year} · ${track.name} — ${track.artists.join(", ")}`, track.id),
+  function initializeGenreInspector() {
+    const select = $("#spotlight-genre");
+    select.replaceChildren(...summary.genre_inspector.genres.map((genre) =>
+      new Option(`${genre.name} · ${numberFormat.format(genre.track_count)} tracks`, genre.name),
     ));
+    updateInspectorTracks();
+  }
+
+  function updateInspectorTracks() {
+    const genreName = $("#spotlight-genre").value;
+    const genre = summary.genre_inspector.genres.find((item) => item.name === genreName);
+    if (!genre) return;
+    const threshold = Number($("#popularity-threshold").value);
+    $("#popularity-value").textContent = `${threshold}+`;
+    const available = summary.genre_inspector.tracks
+      .filter((track) => track.genres.includes(genreName) && track.popularity >= threshold)
+      .sort((a, b) => b.popularity - a.popularity || a.name.localeCompare(b.name));
+    const select = $("#spotlight-select");
+    select.replaceChildren(...available.map((track) =>
+      new Option(`${track.name} — ${track.artists.join(", ")} (${track.year} · ${track.popularity})`, track.id),
+    ));
+    select.disabled = available.length === 0;
+    $("#spotlight-filter-note").textContent =
+      `${numberFormat.format(available.length)} sampled tracks meet ${threshold}+ · genre median uses all ${numberFormat.format(genre.track_count)} matched tracks.`;
+    if (!available.length) {
+      select.replaceChildren(new Option("No sampled tracks at this threshold", ""));
+      $("#spotlight-year").textContent = "—";
+      $("#spotlight-popularity").textContent = "—";
+      $("#spotlight-genre-label").textContent = genreName;
+      $("#spotlight-track-title").textContent = "No tracks at this threshold";
+      $("#spotlight-artist").textContent = "";
+      $("#spotlight-copy").textContent = "Lower the popularity threshold to explore tracks in this artist genre.";
+      $("#spotlight-scale-note").textContent = "";
+      $("#spotlight-ring-key").replaceChildren();
+      d3.select("#spotlight-chart").selectAll("*").remove();
+      hideTooltip();
+      return;
+    }
+    select.value = available[0].id;
     renderSpotlight();
   }
 
   function renderSpotlight() {
-    const track = summary.curated_spotlights.find((item) => item.id === $("#spotlight-select").value);
-    if (!track) return;
-    $("#spotlight-decade").textContent = `${track.year} · ${track.decade}`;
+    const genreName = $("#spotlight-genre").value;
+    const genre = summary.genre_inspector.genres.find((item) => item.name === genreName);
+    const track = summary.genre_inspector.tracks.find((item) =>
+      item.id === $("#spotlight-select").value && item.genres.includes(genreName),
+    );
+    if (!genre || !track) return;
+    $("#spotlight-year").textContent = track.year;
     $("#spotlight-popularity").textContent = `${track.popularity} / 100`;
+    $("#spotlight-genre-label").textContent = genreName;
     $("#spotlight-track-title").textContent = track.name;
     $("#spotlight-artist").textContent = track.artists.join(", ");
-    const baseline = track.birth_decade_baseline;
-    const energyDelta = track.energy - baseline.averages.energy;
-    const acousticDelta = track.acousticness - baseline.averages.acousticness;
+    const energyDelta = track.energy - genre.medians.energy;
+    const acousticDelta = track.acousticness - genre.medians.acousticness;
     const direction = (value) => value >= 0 ? "above" : "below";
     $("#spotlight-copy").textContent =
-      `This track's energy is ${Math.abs(energyDelta).toFixed(2)} ${direction(energyDelta)} its decade mean; acousticness is ${Math.abs(acousticDelta).toFixed(2)} ${direction(acousticDelta)}. The baseline averages ${numberFormat.format(baseline.track_count)} tracks from the ${baseline.decade}.`;
+      `Energy is ${Math.abs(energyDelta).toFixed(2)} ${direction(energyDelta)} the ${genreName} median; acousticness is ${Math.abs(acousticDelta).toFixed(2)} ${direction(acousticDelta)}. The median covers ${numberFormat.format(genre.track_count)} tracks and is not changed by the popularity filter.`;
     $("#spotlight-scale-note").textContent =
-      `Outside the ring · Loudness: ${formatValue(COMPARISON_FEATURES, "loudness", track.loudness)} vs. ${formatValue(COMPARISON_FEATURES, "loudness", baseline.averages.loudness)} decade mean · Duration: ${formatValue(COMPARISON_FEATURES, "duration_ms", track.duration_ms)} vs. ${formatValue(COMPARISON_FEATURES, "duration_ms", baseline.averages.duration_ms)} decade mean.`;
-    renderSpotlightChart(track);
+      `Outside the ring · Loudness: ${formatValue(COMPARISON_FEATURES, "loudness", track.loudness)} vs. ${formatValue(COMPARISON_FEATURES, "loudness", genre.medians.loudness)} genre median · Duration: ${formatValue(COMPARISON_FEATURES, "duration_ms", track.duration_ms)} vs. ${formatValue(COMPARISON_FEATURES, "duration_ms", genre.medians.duration_ms)} genre median.`;
+    renderSpotlightChart(track, genre);
   }
 
-  function renderSpotlightChart(track) {
+  function renderSpotlightChart(track, genre) {
     const svg = d3.select("#spotlight-chart");
     const element = svg.node();
     const width = element.getBoundingClientRect().width;
@@ -518,28 +556,28 @@
     const radius = Math.min(width, height) * 0.43;
     const innerRadius = radius * 0.34;
     const bandWidth = (radius - innerRadius) / SPOTLIGHT_FEATURES.length;
-    const baseline = track.birth_decade_baseline;
+    const medians = genre.medians;
     const arc = d3.arc();
     const fullArc = d3.arc().startAngle(0).endAngle(2 * Math.PI);
     const translated = root.append("g").attr("transform", `translate(${centerX},${centerY})`);
 
-    root.append("title").text(`${track.name}: concentric sound rings`);
-    root.append("desc").text(`Five concentric rings compare acousticness, danceability, energy, instrumentalness, and valence for ${track.name} and the ${baseline.decade} mean. Longer arcs indicate higher 0–1 scores.`);
+    svg.attr("aria-label", `Concentric sound rings for ${track.name} compared with the ${genre.name} artist-genre median`);
+    root.append("desc").text(`Five concentric rings compare acousticness, danceability, energy, instrumentalness, and valence for ${track.name} and the median for ${genre.name}, based on ${numberFormat.format(genre.track_count)} matched tracks.`);
 
     SPOTLIGHT_FEATURES.forEach((key, index) => {
       const feature = COMPARISON_FEATURES[key];
       const trackValue = track[key];
-      const baselineValue = baseline.averages[key];
+      const medianValue = medians[key];
       const outerEdge = radius - index * bandWidth - 1;
       const innerEdge = radius - (index + 1) * bandWidth + 1;
       const laneGap = 1.5;
       const laneWidth = (outerEdge - innerEdge - laneGap) / 2;
       const trackOuter = outerEdge;
       const trackInner = outerEdge - laneWidth;
-      const baselineOuter = innerEdge + laneWidth;
-      const baselineInner = innerEdge;
+      const medianOuter = innerEdge + laneWidth;
+      const medianInner = innerEdge;
       const group = translated.append("g").attr("class", "sound-ring-feature");
-      const currentValueFor = (series) => series === "track" ? trackValue : baselineValue;
+      const currentValueFor = (series) => series === "track" ? trackValue : medianValue;
       const drawArc = (outerRadius, innerRadius, value) => arc
         .innerRadius(innerRadius)
         .outerRadius(outerRadius)
@@ -554,16 +592,16 @@
           .attr("class", `sound-ring-arc sound-ring-arc-${series} sound-ring-progress`)
           .attr("d", drawArc(outerRadius, innerRadius, value))
           .attr("tabindex", 0)
-          .attr("aria-label", `${series === "track" ? track.name : `${baseline.decade} mean`} ${feature.label}: ${formatValue(COMPARISON_FEATURES, key, currentValueFor(series))}`)
+          .attr("aria-label", `${series === "track" ? track.name : `${genre.name} median`} ${feature.label}: ${formatValue(COMPARISON_FEATURES, key, currentValueFor(series))}`)
           .on("pointerenter focus", (event) => showTooltip(
             event,
-            `${feature.label} · ${series === "track" ? track.name : `${baseline.decade} mean`}`,
-            `Track: ${formatValue(COMPARISON_FEATURES, key, trackValue)}\n${baseline.decade} mean: ${formatValue(COMPARISON_FEATURES, key, baselineValue)}`,
+            `${feature.label} · ${series === "track" ? track.name : `${genre.name} median`}`,
+            `Track: ${formatValue(COMPARISON_FEATURES, key, trackValue)}\n${genre.name} median: ${formatValue(COMPARISON_FEATURES, key, medianValue)}`,
           ))
           .on("pointerleave blur", hideTooltip);
       };
       drawLane("track", trackValue, trackOuter, trackInner);
-      drawLane("baseline", baselineValue, baselineOuter, baselineInner);
+      drawLane("median", medianValue, medianOuter, medianInner);
     });
 
     root.append("circle")
@@ -587,7 +625,7 @@
     $("#spotlight-ring-key").innerHTML = SPOTLIGHT_FEATURES.map((key) => `
       <div class="sound-ring-key-item">
         <span>${COMPARISON_FEATURES[key].label}</span>
-        <span class="sound-ring-key-values"><b>${track[key].toFixed(2)}</b><i>/</i><span>${baseline.averages[key].toFixed(2)}</span></span>
+        <span class="sound-ring-key-values"><b>${track[key].toFixed(2)}</b><i>/</i><span>${medians[key].toFixed(2)}</span></span>
       </div>
     `).join("");
   }
@@ -600,6 +638,8 @@
     ["#scatter-x", "#scatter-y", "#scatter-era", "#scatter-tier"].forEach((selector) => {
       $(selector).addEventListener("change", renderScatterChart);
     });
+    $("#spotlight-genre").addEventListener("change", updateInspectorTracks);
+    $("#popularity-threshold").addEventListener("input", updateInspectorTracks);
     $("#spotlight-select").addEventListener("change", renderSpotlight);
     window.addEventListener("resize", () => {
       clearTimeout(resizeTimer);
@@ -629,7 +669,8 @@
     try {
       summary = await d3.json(DATA_URL);
       if (!summary.yearly_tiers?.length || !summary.decade_comparison?.length ||
-          !summary.scatter_sample?.length || !summary.curated_spotlights?.length) {
+          !summary.scatter_sample?.length || !summary.genre_inspector?.genres?.length ||
+          !summary.genre_inspector?.tracks?.length) {
         throw new Error("The survivor summary is missing one or more required sections.");
       }
       $("#dataset-summary").textContent =
@@ -637,7 +678,7 @@
       renderTierLegend();
       renderDecadeLegend();
       initializeScatterControls();
-      initializeSpotlights();
+      initializeGenreInspector();
       bindControls();
       renderAll();
       $("#page-status").classList.add("is-hidden");

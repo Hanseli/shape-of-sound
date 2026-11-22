@@ -241,7 +241,11 @@ select option { color: #1b262d; background: #f2efe7; }
 .spotlight-control { padding: 22px; border: 1px solid rgba(31,43,48,.25); background: rgba(255,255,255,.2); }
 .spotlight-control .inline-control { display: grid; gap: 9px; width: 100%; }
 .spotlight-control .inline-control select { width: 100%; max-width: none; }
-.spotlight-meta { display: flex; justify-content: space-between; gap: 12px; margin: 20px 0 12px; color: #46504c; font: 11px var(--mono); }
+.spotlight-control .threshold-control > span { display: flex; justify-content: space-between; gap: 8px; }
+.threshold-control output { color: #a04c43; font-weight: 500; }
+.spotlight-control input[type="range"] { width: 100%; margin: 3px 0 4px; accent-color: #a04c43; cursor: pointer; }
+.spotlight-filter-note { margin: 1px 0 0; color: #59635e; font-size: 11px; line-height: 1.5; }
+.spotlight-meta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 18px 0 12px; color: #46504c; font: 10px var(--mono); }
 .spotlight-meta b { color: #1c292f; font-weight: 600; }
 .spotlight-control h3 { margin: 0 0 5px; color: #18242a; font: 500 28px/1.13 var(--serif); }
 .spotlight-artist { margin: 0 0 16px; color: #4d5550; font-size: 15px; }
@@ -251,9 +255,9 @@ select option { color: #1b262d; background: #f2efe7; }
 .chapter-coral .comparison-legend { gap: 10px; margin: 0; }
 .chapter-coral .comparison-legend span { color: #39433f; font-size: 10px; }
 .track-dot { background: #273943; }
-.baseline-dot { border: 2px dashed #a04c43; background: transparent; }
+.baseline-dot { border: 0; background: #a04c43; }
 .sound-ring-arc-track { fill: #273943; }
-.sound-ring-arc-baseline { fill: #a04c43; }
+.sound-ring-arc-median { fill: #a04c43; }
 .sound-ring-arc:not(.sound-ring-progress) { opacity: .13; }
 .sound-ring-progress { stroke: #f3efe6; stroke-width: .8; cursor: help; }
 .sound-ring-center { fill: #f3efe6; stroke: rgba(39,57,67,.35); stroke-width: 1; }

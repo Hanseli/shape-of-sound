@@ -266,33 +266,40 @@
         <div class="chapter-content">
           <div class="chapter-head">
             <p class="eyebrow">04 — THE LISTENING ROOM</p>
-            <h2>A survivor has a <em>birth decade.</em><br />And a present tense.</h2>
+            <h2>Every track has its own <em>shape.</em></h2>
             <p class="chapter-intro">
-              Meet eight recognizable high-popularity tracks from the 1940s to the 2010s. For each, the chart
-              wraps five bounded audio scores into concentric sound rings. Each survivor is compared with the
-              average track from its own release decade—a listening profile, not a verdict on what makes a song last.
+              Choose an artist genre and minimum popularity, then inspect a track
+              against the median sound of that genre. Genre tags come from artist metadata, so a track can appear
+              in more than one group; the median uses all matched tracks, regardless of the popularity threshold.
             </p>
           </div>
           <div class="spotlight-layout">
             <div class="spotlight-control">
-              <label class="inline-control" for="spotlight-select"><span>CHOOSE A SURVIVOR</span><select id="spotlight-select"></select></label>
+              <label class="inline-control" for="spotlight-genre"><span>ARTIST GENRE</span><select id="spotlight-genre"></select></label>
+              <label class="inline-control threshold-control" for="popularity-threshold">
+                <span>MINIMUM POPULARITY <output id="popularity-value" for="popularity-threshold">60+</output></span>
+                <input id="popularity-threshold" type="range" min="0" max="90" value="60" step="5" />
+              </label>
+              <label class="inline-control" for="spotlight-select"><span>CHOOSE A TRACK</span><select id="spotlight-select"></select></label>
+              <p class="spotlight-filter-note" id="spotlight-filter-note">Loading the artist-genre track sample…</p>
               <div class="spotlight-meta">
-                <span id="spotlight-decade">—</span>
-                <span>SPOTIFY POPULARITY <b id="spotlight-popularity">—</b></span>
+                <span>YEAR <b id="spotlight-year">—</b></span>
+                <span>POPULARITY <b id="spotlight-popularity">—</b></span>
+                <span>GENRE <b id="spotlight-genre-label">—</b></span>
               </div>
               <h3 id="spotlight-track-title">Loading tracks…</h3>
               <p id="spotlight-artist" class="spotlight-artist"></p>
-              <p id="spotlight-copy" class="spotlight-copy">Track-level measurements compared with the mean of all tracks in the same release decade.</p>
+              <p id="spotlight-copy" class="spotlight-copy">Track-level measurements compared with the median of its selected artist genre.</p>
               <p class="spotlight-scale-note" id="spotlight-scale-note"></p>
             </div>
             <div class="chart-card spotlight-card">
               <div class="chart-heading">
                 <div><span class="chart-kicker">SONIC FINGERPRINT · FIVE 0–1 AUDIO FEATURES</span><h3>The sound ring</h3></div>
-                <div class="comparison-legend"><span><i class="legend-dot track-dot"></i>TRACK</span><span><i class="legend-dot baseline-dot"></i>DECADE MEAN</span></div>
+                <div class="comparison-legend"><span><i class="legend-dot track-dot"></i>TRACK</span><span><i class="legend-dot baseline-dot"></i>GENRE MEDIAN</span></div>
               </div>
-              <div class="svg-frame spotlight-frame"><svg id="spotlight-chart" role="img" aria-label="Concentric sound rings comparing five audio feature scores for the selected track and its birth-decade average"></svg></div>
-              <div class="sound-ring-key" id="spotlight-ring-key" aria-label="Audio feature values for the selected track and decade mean"></div>
-              <p class="spotlight-interpretation"><b>HOW TO READ THE RINGS</b> From outside inward, rings follow the feature key below. Arc length shows its 0–1 score: longer means a higher measured value, not “better.” Solid dark arcs are the track; coral arcs are the decade mean.</p>
+              <div class="svg-frame spotlight-frame"><svg id="spotlight-chart" role="img" aria-label="Concentric sound rings comparing five audio feature scores for the selected track and its artist-genre median"></svg></div>
+              <div class="sound-ring-key" id="spotlight-ring-key" aria-label="Audio feature values for the selected track and artist-genre median"></div>
+              <p class="spotlight-interpretation"><b>HOW TO READ THE RINGS</b> From outside inward, rings follow the feature key below. Arc length shows its 0–1 score: longer means a higher measured value, not “better.” Solid dark arcs are the track; coral arcs are the selected genre’s median.</p>
             </div>
           </div>
           <div class="closing-note">
@@ -305,7 +312,7 @@
       <footer id="sources">
         <div class="footer-top"><span class="wordmark-mark">S<span>/</span>S</span><p>The Shape of Sound<br /><small>READ THE PATTERN. THEN PRESS PLAY.</small></p></div>
         <div class="footer-sources">
-          <div><b>DATASET</b><a href="https://www.kaggle.com/datasets/yamaerenay/spotify-dataset-1921-2020-160k-tracks?resource=download" target="_blank" rel="noreferrer">Yama Erenay · Spotify Dataset 1921–2020 (160k+ Tracks)</a><p>Track-level audio features and current Spotify popularity. This project uses the provided local CSV and its precomputed summary.</p></div>
+          <div><b>DATASET</b><a href="https://www.kaggle.com/datasets/yamaerenay/spotify-dataset-1921-2020-160k-tracks?resource=download" target="_blank" rel="noreferrer">Yama Erenay · Spotify Dataset 1921–2020 (160k+ Tracks)</a><p>Track-level audio features and current Spotify popularity come from the local data.csv. Artist genre tags are joined from data_w_genres.csv; tracks can belong to multiple genres. Genre medians use all matched tracks, while the track picker uses a compact sample stratified by popularity.</p></div>
         </div>
         <div class="footer-bottom"><span>POPULARITY IS A PLATFORM SIGNAL, NOT A HISTORICAL CHART</span><a href="#top">BACK TO TOP ↑</a></div>
       </footer>
