@@ -105,19 +105,12 @@
             <div class="chart-legend" id="tier-legend"></div>
           </div>
           <div class="chart-card feature-card">
-            <div class="chart-heading feature-toolbar">
-              <div><span class="chart-kicker">AUDIO FINGERPRINT · YEARLY MEAN</span><h3>How does the recording's texture shift?</h3></div>
-              <label class="inline-control" for="year-feature"><span>TRACE A FEATURE</span><select id="year-feature">
-                <option value="loudness">Loudness</option>
-                <option value="acousticness">Acousticness</option>
-                <option value="energy">Energy</option>
-                <option value="valence">Valence</option>
-                <option value="instrumentalness">Instrumentalness</option>
-                <option value="duration_ms">Duration</option>
-              </select></label>
+            <div class="chart-heading">
+              <div><span class="chart-kicker">ANNUAL MEANS · SIX AUDIO FEATURES</span><h3>How does the recording’s texture shift?</h3></div>
+              <span class="chart-side-note">Each panel has its own vertical scale.</span>
             </div>
-            <div class="svg-frame feature-frame"><svg id="feature-chart" role="img" aria-label="Line chart of a selected average Spotify audio feature by release year"></svg></div>
-            <p class="chart-caption">Annual means summarize the tracks present in that year. Hover or focus a year to see its track count and tier mix.</p>
+            <div class="feature-multiples" id="feature-multiples" aria-label="Six small-multiple line charts showing yearly average audio features from 1921 to 2020"></div>
+            <p class="chart-caption">All six features share the same year range. Hover or focus a point to see its yearly mean and track count.</p>
           </div>
           <p class="chapter-takeaway"><b>THE FIRST FILTER</b> Streaming popularity describes which tracks remain visible on this platform today. It should not be read as a measure of how popular those tracks were when they first appeared.</p>
         </div>

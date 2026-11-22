@@ -134,10 +134,15 @@ select option { color: #1b262d; background: #f2efe7; }
 .svg-frame { position: relative; width: 100%; }
 .svg-frame svg { display: block; width: 100%; height: 100%; overflow: visible; }
 .tier-frame { height: clamp(360px, 52vh, 510px); }
-.feature-frame { height: clamp(300px, 42vh, 420px); }
 .decade-frame { height: clamp(390px, 51vh, 520px); }
 .scatter-frame { height: clamp(420px, 57vh, 570px); }
 .spotlight-frame { height: clamp(390px, 50vh, 510px); }
+.feature-multiples { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.feature-multiple { min-width: 0; padding: 12px 10px 6px; border: 1px solid rgba(235,239,230,.12); background: rgba(255,255,255,.025); }
+.feature-multiple-title { margin: 0 0 4px; color: #e6e9df; font: 500 14px/1.35 var(--sans); }
+.feature-multiple-chart { display: block; width: 100%; height: 170px; overflow: visible; }
+.chapter-paper .feature-multiple { border-color: #d7d2c7; background: rgba(255,255,255,.32); }
+.chapter-paper .feature-multiple-title { color: #273238; }
 .axis text { fill: #aebbb7; font: 12px var(--mono); }
 .chapter-paper .axis text { fill: #59645f; }
 .chapter-coral .axis text { fill: #4d4540; }
@@ -152,7 +157,7 @@ select option { color: #1b262d; background: #f2efe7; }
 .area-faded { fill: var(--faded); fill-opacity: .68; }
 .area-nostalgia { fill: var(--nostalgia); fill-opacity: .68; }
 .area-survivors { fill: var(--survivor); fill-opacity: .76; }
-.feature-line { fill: none; stroke: var(--mint); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+.feature-line { fill: none; stroke: var(--mint); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 .feature-point { fill: var(--mint); stroke: #15222c; stroke-width: 1.5; }
 .year-hit { fill: transparent; cursor: crosshair; }
 .chart-legend, .comparison-legend, .scatter-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; }
@@ -286,7 +291,7 @@ footer { padding: 45px 3.8vw 22px; border-top: 1px solid var(--line); }
   .chart-heading { align-items: flex-start; flex-direction: column; gap: 10px; }
   .chart-heading h3 { font-size: 21px; }
   .chart-side-note { text-align: left; }
-  .feature-toolbar, .comparison-toolbar { align-items: flex-start; }
+  .comparison-toolbar { align-items: flex-start; }
   .inline-control { align-items: flex-start; flex-wrap: wrap; gap: 7px; }
   .inline-control select { min-width: 145px; }
   .comparison-legend { justify-content: flex-start; }
@@ -309,10 +314,18 @@ footer { padding: 45px 3.8vw 22px; border-top: 1px solid var(--line); }
   .hero-rule { font-size: 8px; }
   .scatter-controls { grid-template-columns: 1fr; }
   .tier-frame { height: 360px; }
-  .feature-frame { height: 315px; }
   .decade-frame { height: 390px; }
   .scatter-frame { height: 410px; }
   .spotlight-frame { height: 410px; }
+}
+
+@media (max-width: 900px) {
+  .feature-multiples { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+}
+
+@media (max-width: 560px) {
+  .feature-multiples { grid-template-columns: 1fr; }
+  .feature-multiple-chart { height: 180px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

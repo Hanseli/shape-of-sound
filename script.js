@@ -203,57 +203,75 @@
       .on("pointerleave blur", hideTooltip);
   }
 
-  function renderYearFeature() {
-    const svg = d3.select("#feature-chart");
-    const element = svg.node();
-    const width = element.getBoundingClientRect().width;
-    const height = element.getBoundingClientRect().height;
-    if (!width || !height) return;
+  function renderYearFeatures() {
+    const container = d3.select("#feature-multiples");
+    const keys = Object.keys(YEAR_FEATURES);
+    const cards = container.selectAll(".feature-multiple")
+      .data(keys, (key) => key)
+      .join((enter) => {
+        const card = enter.append("section").attr("class", "feature-multiple");
+        card.append("h4").attr("class", "feature-multiple-title");
+        card.append("svg").attr("class", "feature-multiple-chart").attr("role", "img");
+        return card;
+      });
 
-    const key = $("#year-feature").value;
-    const feature = YEAR_FEATURES[key];
-    const isMobile = width < 540;
-    const margin = { top: 18, right: 15, bottom: isMobile ? 58 : 62, left: isMobile ? 57 : 68 };
-    const innerWidth = width - margin.left - margin.right;
-    const innerHeight = height - margin.top - margin.bottom;
-    const rows = summary.yearly_tiers.filter((row) => row.averages[key] !== null);
-    const values = rows.map((row) => valueFor(YEAR_FEATURES, key, row.averages[key]));
-    const domain = xScaleDomain(values);
-    const padding = (domain[1] - domain[0]) * .04;
-    const x = d3.scaleLinear().domain([1921, 2020]).range([0, innerWidth]);
-    const y = d3.scaleLinear().domain([domain[0] - padding, domain[1] + padding]).nice(5).range([innerHeight, 0]);
-    const root = svg.attr("viewBox", `0 0 ${width} ${height}`).attr("preserveAspectRatio", "xMidYMid meet");
-    root.selectAll("*").remove();
-    const plot = root.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
-    addAxes(plot, x, y, innerWidth, innerHeight, { xTicks: isMobile ? 5 : 8 });
-    plot.append("text")
-      .attr("class", "axis-title")
-      .attr("transform", "rotate(-90)")
-      .attr("x", -innerHeight / 2)
-      .attr("y", isMobile ? -47 : -55)
-      .attr("text-anchor", "middle")
-      .text(`${feature.label.toUpperCase()} · ${feature.unit.toUpperCase()}`);
+    cards.each(function (key) {
+      const card = d3.select(this);
+      const feature = YEAR_FEATURES[key];
+      card.select(".feature-multiple-title").text(`${feature.label} · ${feature.unit}`);
+      const svg = card.select("svg")
+        .attr("aria-label", `Yearly mean ${feature.label.toLowerCase()} from 1921 to 2020`);
+      const element = svg.node();
+      const width = element.getBoundingClientRect().width;
+      const height = element.getBoundingClientRect().height;
+      if (!width || !height) return;
 
-    const line = d3.line()
-      .x((row) => x(row.year))
-      .y((row) => y(valueFor(YEAR_FEATURES, key, row.averages[key])))
-      .curve(d3.curveMonotoneX);
-    plot.append("path").datum(rows).attr("class", "feature-line").attr("d", line);
-    plot.selectAll(".feature-point")
-      .data(rows)
-      .join("circle")
-      .attr("class", "feature-point")
-      .attr("cx", (row) => x(row.year))
-      .attr("cy", (row) => y(valueFor(YEAR_FEATURES, key, row.averages[key])))
-      .attr("r", 3)
-      .attr("tabindex", 0)
-      .attr("aria-label", (row) => `${row.year}: ${formatValue(YEAR_FEATURES, key, row.averages[key])}; ${numberFormat.format(row.counts.total)} tracks`)
-      .on("pointerenter focus", (event, row) => showTooltip(
-        event,
-        `${row.year} · ${feature.label}`,
-        `Yearly mean: ${formatValue(YEAR_FEATURES, key, row.averages[key])}\nTracks in dataset: ${numberFormat.format(row.counts.total)}\nSurvivors: ${numberFormat.format(row.counts.survivors)}`,
-      ))
-      .on("pointerleave blur", hideTooltip);
+      const margin = { top: 10, right: 10, bottom: 28, left: 47 };
+      const innerWidth = Math.max(20, width - margin.left - margin.right);
+      const innerHeight = Math.max(24, height - margin.top - margin.bottom);
+      const rows = summary.yearly_tiers.filter((row) => row.averages[key] !== null);
+      const values = rows.map((row) => valueFor(YEAR_FEATURES, key, row.averages[key]));
+      const domain = xScaleDomain(values);
+      const padding = (domain[1] - domain[0]) * .04;
+      const x = d3.scaleLinear().domain([1921, 2020]).range([0, innerWidth]);
+      const y = d3.scaleLinear().domain([domain[0] - padding, domain[1] + padding]).nice(3).range([innerHeight, 0]);
+      const root = svg.attr("viewBox", `0 0 ${width} ${height}`).attr("preserveAspectRatio", "xMidYMid meet");
+      root.selectAll("*").remove();
+      const plot = root.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+      plot.append("g")
+        .attr("class", "grid-line axis")
+        .call(d3.axisLeft(y).ticks(3).tickSize(-innerWidth).tickFormat(""))
+        .call((group) => group.select(".domain").remove());
+      plot.append("g")
+        .attr("class", "axis")
+        .attr("transform", `translate(0,${innerHeight})`)
+        .call(d3.axisBottom(x).ticks(width < 360 ? 3 : 4).tickFormat(d3.format("d")).tickSizeOuter(0));
+      plot.append("g")
+        .attr("class", "axis")
+        .call(d3.axisLeft(y).ticks(3).tickFormat((value) => formatAxisValue(YEAR_FEATURES, key, value)).tickSizeOuter(0));
+
+      const line = d3.line()
+        .x((row) => x(row.year))
+        .y((row) => y(valueFor(YEAR_FEATURES, key, row.averages[key])))
+        .curve(d3.curveMonotoneX);
+      plot.append("path").datum(rows).attr("class", "feature-line").attr("d", line);
+      plot.selectAll(".feature-point")
+        .data(rows)
+        .join("circle")
+        .attr("class", "feature-point")
+        .attr("cx", (row) => x(row.year))
+        .attr("cy", (row) => y(valueFor(YEAR_FEATURES, key, row.averages[key])))
+        .attr("r", 2.5)
+        .attr("tabindex", 0)
+        .attr("aria-label", (row) => `${row.year}: ${formatValue(YEAR_FEATURES, key, row.averages[key])}; ${numberFormat.format(row.counts.total)} tracks`)
+        .on("pointerenter focus", (event, row) => showTooltip(
+          event,
+          `${row.year} · ${feature.label}`,
+          `Yearly mean: ${formatValue(YEAR_FEATURES, key, row.averages[key])}\nTracks in dataset: ${numberFormat.format(row.counts.total)}\nSurvivors: ${numberFormat.format(row.counts.survivors)}`,
+        ))
+        .on("pointerleave blur", hideTooltip);
+    });
   }
 
   function renderDecadeLegend() {
@@ -567,7 +585,6 @@
   }
 
   function bindControls() {
-    $("#year-feature").addEventListener("change", renderYearFeature);
     $("#comparison-feature").addEventListener("change", renderDecadeChart);
     ["#scatter-x", "#scatter-y", "#scatter-era", "#scatter-tier"].forEach((selector) => {
       $(selector).addEventListener("change", renderScatterChart);
@@ -591,7 +608,7 @@
 
   function renderAll() {
     renderTierChart();
-    renderYearFeature();
+    renderYearFeatures();
     renderDecadeChart();
     renderScatterChart();
     if ($("#spotlight-select").value) renderSpotlight();
