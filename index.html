@@ -72,6 +72,63 @@
             <span><b>OUR WORKING TIERS</b><small>FADED &lt; 20 &nbsp;·&nbsp; NOSTALGIA 20–55 &nbsp;·&nbsp; SURVIVORS &gt; 55</small></span>
             <span class="definition-live" id="dataset-summary">Loading the archive…</span>
           </div>
+          <aside class="attribute-guide">
+            <div>
+              <span class="eyebrow">BEFORE THE CHARTS</span>
+              <h3>What does a song’s audio fingerprint measure?</h3>
+              <p>The dataset pairs track details with Spotify’s measured audio attributes. Open the guide for plain-language definitions, scales, and the fields used in this story.</p>
+            </div>
+            <button class="attribute-guide-button" id="open-attribute-guide" type="button" aria-haspopup="dialog" aria-controls="attribute-guide-dialog">Explore the attributes <span aria-hidden="true">↗</span></button>
+          </aside>
+          <dialog class="attribute-dialog" id="attribute-guide-dialog" aria-labelledby="attribute-guide-title">
+            <div class="attribute-dialog-header">
+              <div>
+                <p class="eyebrow">A FIELD GUIDE TO THE DATA</p>
+                <h3 id="attribute-guide-title">What Spotify measures—and what it doesn’t</h3>
+              </div>
+              <form method="dialog"><button class="attribute-dialog-close" aria-label="Close attribute guide">Close <span aria-hidden="true">×</span></button></form>
+            </div>
+            <p class="attribute-dialog-intro">Spotify’s audio attributes are estimates, not direct measurements of a song’s cultural meaning. These definitions follow Spotify’s documentation; this project analyzes a static Kaggle dataset rather than making live API requests.</p>
+            <div class="attribute-groups">
+              <section class="attribute-group" aria-labelledby="attribute-sound-title">
+                <h4 id="attribute-sound-title">Sound &amp; feeling</h4>
+                <dl>
+                  <div><dt>Acousticness <span>0–1</span></dt><dd>Confidence that a track is acoustic; higher means more likely acoustic.</dd></div>
+                  <div><dt>Danceability <span>0–1</span></dt><dd>How suitable a track is for dancing, based on factors such as tempo, rhythm stability, beat strength, and regularity.</dd></div>
+                  <div><dt>Energy <span>0–1</span></dt><dd>A perceptual measure of intensity and activity. Louder, faster, and more intense tracks tend to score higher.</dd></div>
+                  <div><dt>Valence <span>0–1</span></dt><dd>Musical positivity: higher values tend to sound more positive; lower values more negative.</dd></div>
+                  <div><dt>Loudness <span>dB</span></dt><dd>Average overall loudness across a track, measured in decibels. Values are typically between −60 and 0 dB.</dd></div>
+                </dl>
+              </section>
+              <section class="attribute-group" aria-labelledby="attribute-voice-title">
+                <h4 id="attribute-voice-title">Voice &amp; performance</h4>
+                <dl>
+                  <div><dt>Instrumentalness <span>0–1</span></dt><dd>How likely a track contains no vocals; values closer to 1 indicate stronger instrumental confidence.</dd></div>
+                  <div><dt>Speechiness <span>0–1</span></dt><dd>How speech-like a track is. High values suggest spoken word; middle values can include mixed speech and music, including rap.</dd></div>
+                  <div><dt>Liveness <span>0–1</span></dt><dd>Estimated presence of an audience. Higher values suggest a live performance; above 0.8 is a strong indicator.</dd></div>
+                </dl>
+              </section>
+              <section class="attribute-group" aria-labelledby="attribute-structure-title">
+                <h4 id="attribute-structure-title">Structure &amp; harmony</h4>
+                <dl>
+                  <div><dt>Tempo <span>BPM</span></dt><dd>Estimated overall pace of the track in beats per minute.</dd></div>
+                  <div><dt>Duration <span>ms → min</span></dt><dd>Track length in milliseconds; charts display it in minutes for readability.</dd></div>
+                  <div><dt>Key <span>−1, 0–11</span></dt><dd>Estimated pitch class: 0 is C, values continue by semitone through 11 (B); −1 means no key was detected.</dd></div>
+                  <div><dt>Mode <span>0 / 1</span></dt><dd>Estimated modality: 0 is minor and 1 is major.</dd></div>
+                </dl>
+              </section>
+              <section class="attribute-group" aria-labelledby="attribute-catalog-title">
+                <h4 id="attribute-catalog-title">Catalog fields used for context</h4>
+                <dl>
+                  <div><dt>Popularity <span>0–100</span></dt><dd>Spotify’s current platform popularity score—not historical chart rank and not an audio feature.</dd></div>
+                  <div><dt>Year &amp; release date</dt><dd>When a track was released in the dataset; the charts group tracks by year.</dd></div>
+                  <div><dt>Name, artists &amp; ID</dt><dd>Track title, credited artist names, and the track’s dataset identifier.</dd></div>
+                  <div><dt>Explicit <span>0 / 1</span></dt><dd>Whether the dataset flags the track as explicit content.</dd></div>
+                </dl>
+              </section>
+            </div>
+            <p class="attribute-source">Source: <a href="https://developer.spotify.com/documentation/web-api/reference/get-audio-features" target="_blank" rel="noreferrer">Spotify Web API · Get Track’s Audio Features</a> (documentation marks this endpoint deprecated).</p>
+          </dialog>
           <p class="caveat">
             The catalog is unevenly sampled across years. In this dataset, the 1920s contain no tracks above
             the survivor threshold; early-decade comparisons can also rest on very small groups.
@@ -87,7 +144,7 @@
             <h2>A century in the catalog.<br /><em>Not</em> a century of chart history.</h2>
             <p class="chapter-intro">
               Each year contributes a different mix of tracks. The first chart shows the catalog's present-day
-              popularity tiers by release year; the second traces one audio feature across the same timeline.
+              popularity tiers by release year; the second compares six audio features across the same timeline.
               Together they set the baseline for the comparisons ahead.
             </p>
           </div>
@@ -245,9 +302,7 @@
       <footer id="sources">
         <div class="footer-top"><span class="wordmark-mark">S<span>/</span>S</span><p>The Shape of Sound<br /><small>READ THE PATTERN. THEN PRESS PLAY.</small></p></div>
         <div class="footer-sources">
-          <div><b>DATASET</b><a href="https://www.kaggle.com/datasets/yamaerenay/spotify-dataset-19212020-160k-tracks" target="_blank" rel="noreferrer">Yama Erenay · Spotify Dataset 1921–2020 (160k+ Tracks)</a><p>Track-level audio features and current Spotify popularity. This project uses the provided local CSV and its precomputed summary.</p></div>
-          <div><b>VISUALIZATION</b><a href="https://www.cs.ubc.ca/~tmm/vadbook/" target="_blank" rel="noreferrer">Tamara Munzner · Visualization Analysis and Design (2014)</a><p>Comparisons move from overview to detail; visual encodings make relationships and uncertainty visible.</p></div>
-          <div><b>STORY INSPIRATION</b><a href="https://pudding.cool/" target="_blank" rel="noreferrer">The Pudding · Visual Essays</a><p>A reference for guided, reader-paced data storytelling.</p></div>
+          <div><b>DATASET</b><a href="https://www.kaggle.com/datasets/yamaerenay/spotify-dataset-1921-2020-160k-tracks?resource=download" target="_blank" rel="noreferrer">Yama Erenay · Spotify Dataset 1921–2020 (160k+ Tracks)</a><p>Track-level audio features and current Spotify popularity. This project uses the provided local CSV and its precomputed summary.</p></div>
         </div>
         <div class="footer-bottom"><span>POPULARITY IS A PLATFORM SIGNAL, NOT A HISTORICAL CHART</span><a href="#top">BACK TO TOP ↑</a></div>
       </footer>

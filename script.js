@@ -585,6 +585,9 @@
   }
 
   function bindControls() {
+    $("#open-attribute-guide").addEventListener("click", () => {
+      $("#attribute-guide-dialog").showModal();
+    });
     $("#comparison-feature").addEventListener("change", renderDecadeChart);
     ["#scatter-x", "#scatter-y", "#scatter-era", "#scatter-tier"].forEach((selector) => {
       $(selector).addEventListener("change", renderScatterChart);
