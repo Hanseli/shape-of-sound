@@ -17,11 +17,12 @@
     <a class="skip-link" href="#main">Skip to story</a>
     <header class="site-header">
       <a class="wordmark" href="#top"><span class="wordmark-mark">S<span>/</span>S</span><span>FIELD NOTES <i>/</i> SOUND</span></a>
-      <nav aria-label="Story chapters" class="chapter-nav">
+      <nav aria-label="Story chapters and remarks" class="chapter-nav">
         <a href="#chapter-1">01 <span>Time</span></a>
         <a href="#chapter-2">02 <span>Survivors</span></a>
         <a href="#chapter-3">03 <span>Sound</span></a>
         <a href="#chapter-4">04 <span>Tracks</span></a>
+        <a href="#remarks">05 <span>Remarks</span></a>
       </nav>
       <a class="source-jump" href="#sources">Sources <span aria-hidden="true">↗</span></a>
     </header>
@@ -305,6 +306,90 @@
           <div class="closing-note">
             <span>THE SURVIVOR FILTER, IN SHORT</span>
             <p>A current popularity score can point us toward songs that still circulate. Audio features can describe their sound. Neither can tell the whole story of memory, rediscovery, licensing, playlist placement, or the people who keep listening.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="story-section chapter chapter-paper remarks-section" id="remarks">
+        <div class="section-rail"><span>TOOLS &amp; CHART CHOICES</span><i></i><span>05 / REMARKS</span></div>
+        <div class="chapter-content">
+          <div class="chapter-head">
+            <p class="eyebrow">FIELD NOTES / METHOD</p>
+            <h2>How this story was <em>built.</em></h2>
+            <p class="chapter-intro">
+              The data pipeline, tools, and chart choices—at a glance.
+            </p>
+          </div>
+          <ol class="remarks-pipeline" aria-label="Story pipeline: source data, precomputed summary, D3 charts, interactive story">
+            <li><b>01</b><strong>CSV</strong><span>Source data</span></li>
+            <li><b>02</b><strong>JSON</strong><span>Fast summary</span></li>
+            <li><b>03</b><strong>D3</strong><span>SVG charts</span></li>
+            <li><b>04</b><strong>YOU</strong><span>Explore</span></li>
+          </ol>
+          <div class="remarks-layout">
+            <section class="remarks-panel" aria-labelledby="remarks-tools-title">
+              <span class="remarks-kicker">01 / TOOLKIT</span>
+              <h3 id="remarks-tools-title">Tools &amp; libraries</h3>
+              <article class="remarks-item">
+                <h4>Data &amp; preprocessing</h4>
+                <ul class="remarks-list">
+                  <li><strong>Source:</strong> 170,653 Spotify tracks (1921–2020), audio features, and popularity (0–100).</li>
+                  <li><strong>Inputs:</strong> <code>Data/data.csv</code> + <code>Data/data_w_genres.csv</code> (artist genres).</li>
+                  <li><strong>Fast load:</strong> <code>Data/survivor_summary.json</code> precomputes yearly, decade, scatter, and genre data.</li>
+                </ul>
+              </article>
+              <article class="remarks-item">
+                <h4>Visualization &amp; web stack</h4>
+                <ul class="remarks-list">
+                  <li><strong>D3.js v7:</strong> Custom SVGs via <code>d3.stack</code>, <code>d3.area</code>, <code>d3.line</code>, scales, <code>d3.symbol</code>, and <code>d3.arc</code>.</li>
+                  <li><strong>HTML5 / CSS3 / vanilla JS:</strong> Responsive layout, attribute-guide dialog, filters, and scroll-aware chapter navigation. No build step.</li>
+                </ul>
+              </article>
+              <article class="remarks-item">
+                <h4>Workflow &amp; typography</h4>
+                <ul class="remarks-list">
+                  <li><strong>Build &amp; publish:</strong> VS Code, GitHub Copilot, Git, and GitHub Pages.</li>
+                  <li><strong>Google Fonts:</strong> Playfair Display (headlines), DM Sans (body/UI), DM Mono (data).</li>
+                  <li><strong>Design fit:</strong> Custom SVG gives precise encodings; static JSON keeps filtering client-side and quick.</li>
+                </ul>
+              </article>
+            </section>
+            <section class="remarks-panel chart-rationale" aria-labelledby="remarks-charts-title">
+              <span class="remarks-kicker">02 / DESIGN LOGIC</span>
+              <h3 id="remarks-charts-title">Why these charts?</h3>
+              <ol>
+                <li>
+                  <b>01</b>
+                  <div><h4>100% stacked area · popularity by year</h4>
+                    <p>Unequal yearly counts make Faded, Nostalgia, and Survivor shares the useful comparison. A fixed 0–100% baseline keeps thin bands visible.</p>
+                  </div>
+                </li>
+                <li>
+                  <b>02</b>
+                  <div><h4>Six small-multiple lines · audio over time</h4>
+                    <p>Shared years align trends; independent y-scales keep dB, minutes, and 0–1 scores legible.</p>
+                  </div>
+                </li>
+                <li>
+                  <b>03</b>
+                  <div><h4>Dumbbell plot · faded vs. survivor means</h4>
+                    <p>Within-decade pairs show the direction and size of each mean gap. <code>n</code> labels expose small samples.</p>
+                  </div>
+                </li>
+                <li>
+                  <b>04</b>
+                  <div><h4>Multi-encoding scatter · track-level detail</h4>
+                    <p>Individual tracks preserve variation: color = popularity tier, shape = release era. Filters focus the X/Y comparison.</p>
+                  </div>
+                </li>
+                <li>
+                  <b>05</b>
+                  <div><h4>Concentric sound ring · one track in context</h4>
+                    <p>Five 0–1 traits compare one track with its artist-genre median. The vinyl-like form invites exploration, not a “best” score.</p>
+                  </div>
+                </li>
+              </ol>
+            </section>
           </div>
         </div>
       </section>
